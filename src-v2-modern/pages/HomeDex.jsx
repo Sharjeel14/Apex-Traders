@@ -27,11 +27,13 @@ export function HomeDex() {
         style={{
           maxWidth: '1240px',
           width: '100%',
-          margin: '16px auto 0 auto',
-          padding: '0 24px',
+          margin: '12px auto 0 auto',
+          padding: '0 16px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '8px',
         }}
       >
         <button

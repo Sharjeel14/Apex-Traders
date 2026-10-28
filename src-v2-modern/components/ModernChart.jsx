@@ -291,8 +291,8 @@ export function ModernChart() {
       </div>
 
       {/* Indicator Badges */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', padding: '8px 12px', background: 'var(--bg-surface-elevated)', borderRadius: 'var(--radius-md)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflowX: 'auto', padding: '8px 12px', background: 'var(--bg-surface-elevated)', borderRadius: 'var(--radius-md)', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>
           <Layers size={14} />
           <span>{t('trade.indicators')}:</span>
         </div>
@@ -310,6 +310,7 @@ export function ModernChart() {
               background: p.active ? 'var(--bg-surface)' : 'transparent',
               color: p.active ? p.color : 'var(--text-muted)',
               cursor: 'pointer',
+              flexShrink: 0,
             }}
           >
             {p.label}
@@ -318,7 +319,7 @@ export function ModernChart() {
       </div>
 
       {/* Main Chart */}
-      <div style={{ height: '320px', width: '100%', position: 'relative' }}>
+      <div className="v2-chart-container">
         <Line data={{ labels, datasets }} options={chartOptions} />
       </div>
 

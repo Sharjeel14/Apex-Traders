@@ -16,37 +16,37 @@ export function TickerListDex() {
   })
 
   return (
-    <div style={{ maxWidth: '1200px', width: '100%', margin: '32px auto', padding: '0 24px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div style={{ maxWidth: '1200px', width: '100%', margin: '20px auto', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Hero Banner */}
-      <div className="v2-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', padding: '32px' }}>
-        <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15))', color: 'var(--color-purple)', fontSize: '0.78rem', fontWeight: 800, marginBottom: '12px' }}>
-            <Sparkles size={14} />
+      <div className="v2-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', padding: '24px 20px' }}>
+        <div style={{ flex: '1 1 280px' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15))', color: 'var(--color-purple)', fontSize: '0.75rem', fontWeight: 800, marginBottom: '10px' }}>
+            <Sparkles size={13} />
             <span>DISCOVER CRYPTO MARKETS</span>
           </div>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: 900, letterSpacing: '-0.03em' }}>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
             {t('list.title')}
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginTop: '6px', maxWidth: '600px' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginTop: '4px', maxWidth: '600px' }}>
             {t('list.subtitle')}
           </p>
         </div>
 
         {/* Search */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-full)', padding: '10px 18px', minWidth: '300px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-full)', padding: '8px 16px', width: '100%', maxWidth: '380px' }}>
           <Search size={16} color="var(--text-muted)" />
           <input
             type="text"
             placeholder={t('list.search')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', width: '100%', fontSize: '0.9rem' }}
+            style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', width: '100%', fontSize: '0.85rem' }}
           />
         </div>
       </div>
 
       {/* Grid of Ticker Items */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
         {filteredPairs.map(([pair, data]) => {
           const isBull = data.change24h >= 0
 
