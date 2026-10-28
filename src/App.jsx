@@ -3,6 +3,7 @@ import { useRouterStore } from './store/routerStore'
 import { useMarketStore } from './store/marketStore'
 import { useThemeStore } from './store/themeStore'
 import { MobileBottomBar } from './components/MobileBottomBar'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import VariationOneTerminal from '@v1/index'
 import VariationTwoDex from '@v2/index'
 
@@ -26,7 +27,9 @@ export function App() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {currentVariation === 'v1' ? <VariationOneTerminal /> : <VariationTwoDex />}
+      <ErrorBoundary>
+        {currentVariation === 'v1' ? <VariationOneTerminal /> : <VariationTwoDex />}
+      </ErrorBoundary>
       <MobileBottomBar />
     </div>
   )

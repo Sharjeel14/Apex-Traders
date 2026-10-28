@@ -17,6 +17,36 @@ import { useThemeStore } from '@src/store/themeStore'
 import { calculateSMA, calculateEMA, calculateBollingerBands, calculateRSI, calculateMACD } from '@src/shared/indicators'
 import { LineChart as LineIcon, CandlestickChart as CandleIcon } from 'lucide-react'
 
+// Registered ONCE at module top level to prevent duplicate registration crash
+const candlestickWicksPlugin = {
+  id: 'candlestickWicksPlugin',
+  beforeDatasetDraw(chart, args) {
+    const meta = chart.getDatasetMeta(args.index)
+    if (!meta || !meta.data || !chart.config.options?.plugins?.candlestickWicks?.enabled) return
+    const candles = chart.config.options.plugins.candlestickWicks.candles || []
+    if (candles.length === 0) return
+
+    const { ctx } = chart
+    ctx.save()
+    meta.data.forEach((bar, idx) => {
+      const candle = candles[idx]
+      if (!candle) return
+      const x = bar.x
+      const yScale = chart.scales.y
+      const yHigh = yScale.getPixelForValue(candle.high)
+      const yLow = yScale.getPixelForValue(candle.low)
+
+      ctx.strokeStyle = candle.isBull ? '#10b981' : '#ef4444'
+      ctx.lineWidth = 1.5
+      ctx.beginPath()
+      ctx.moveTo(x, yHigh)
+      ctx.lineTo(x, yLow)
+      ctx.stroke()
+    })
+    ctx.restore()
+  },
+}
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -26,7 +56,8 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  candlestickWicksPlugin
 )
 
 export function TradingChart() {
@@ -50,8 +81,8 @@ export function TradingChart() {
 
   if (!pairData) return null
 
-  const prices = pairData.history
-  const labels = pairData.timestamps
+  const prices = pairData.history || []
+  const labels = pairData.timestamps || []
   const candles = pairData.candles || []
 
   // Indicator series
@@ -184,35 +215,6 @@ export function TradingChart() {
     )
   }
 
-  // Candlestick High/Low Wicks Plugin
-  const candlestickWicksPlugin = {
-    id: 'candlestickWicks',
-    beforeDatasetDraw: (chart, args) => {
-      if (!isCandleMode || args.index !== 0) return
-      const { ctx } = chart
-      const meta = chart.getDatasetMeta(0)
-      if (!meta || !meta.data) return
-
-      ctx.save()
-      meta.data.forEach((bar, idx) => {
-        const candle = candles[idx]
-        if (!candle) return
-        const x = bar.x
-        const yScale = chart.scales.y
-        const yHigh = yScale.getPixelForValue(candle.high)
-        const yLow = yScale.getPixelForValue(candle.low)
-
-        ctx.strokeStyle = candle.isBull ? '#10b981' : '#ef4444'
-        ctx.lineWidth = 1.5
-        ctx.beginPath()
-        ctx.moveTo(x, yHigh)
-        ctx.lineTo(x, yLow)
-        ctx.stroke()
-      })
-      ctx.restore()
-    },
-  }
-
   const mainOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -222,6 +224,10 @@ export function TradingChart() {
       intersect: false,
     },
     plugins: {
+      candlestickWicks: {
+        enabled: isCandleMode,
+        candles,
+      },
       legend: {
         position: 'top',
         labels: {
@@ -334,7 +340,7 @@ export function TradingChart() {
   const timeframes = ['1m', '5m', '15m', '1h', '4h', '1d']
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '440px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', overflow: 'hidden' }}>
       {/* Timeframe & Pattern Toggle Bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexWrap: 'wrap', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -409,33 +415,33 @@ export function TradingChart() {
         </div>
       </div>
 
-      {/* Main Chart */}
-      <div style={{ flex: 1, minHeight: '260px', padding: '8px 12px 4px 12px', position: 'relative' }}>
+      {/* Main Chart - FIXED HEIGHT CONTAINER prevents infinite vertical expansion loop */}
+      <div style={{ height: '340px', minHeight: '340px', maxHeight: '340px', padding: '8px 12px 4px 12px', position: 'relative', width: '100%', overflow: 'hidden' }}>
         <Chart
+          key={`chart-${proChartPattern}-${activePair}`}
           type={isCandleMode ? 'bar' : 'line'}
           data={{ labels, datasets }}
           options={mainOptions}
-          plugins={[candlestickWicksPlugin]}
         />
       </div>
 
       {/* Sub-chart: RSI */}
       {showRSI && rsiData && (
-        <div style={{ height: '90px', padding: '0 12px', borderTop: '1px solid var(--border-subtle)', position: 'relative' }}>
+        <div style={{ height: '85px', minHeight: '85px', maxHeight: '85px', padding: '0 12px', borderTop: '1px solid var(--border-subtle)', position: 'relative', width: '100%', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 4, left: 14, fontSize: '0.68rem', color: '#a855f7', fontWeight: 600 }}>
             RSI (14) — 70 Overbought / 30 Oversold
           </div>
-          <Chart type="line" data={rsiData} options={rsiOptions} />
+          <Chart key={`rsi-${activePair}`} type="line" data={rsiData} options={rsiOptions} />
         </div>
       )}
 
       {/* Sub-chart: MACD */}
       {showMACD && macdData && (
-        <div style={{ height: '90px', padding: '0 12px', borderTop: '1px solid var(--border-subtle)', position: 'relative' }}>
+        <div style={{ height: '85px', minHeight: '85px', maxHeight: '85px', padding: '0 12px', borderTop: '1px solid var(--border-subtle)', position: 'relative', width: '100%', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 4, left: 14, fontSize: '0.68rem', color: '#3b82f6', fontWeight: 600 }}>
             MACD (12, 26, 9)
           </div>
-          <Chart type="line" data={macdData} options={rsiOptions} />
+          <Chart key={`macd-${activePair}`} type="line" data={macdData} options={rsiOptions} />
         </div>
       )}
     </div>

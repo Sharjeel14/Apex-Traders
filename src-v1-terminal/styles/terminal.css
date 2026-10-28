@@ -146,6 +146,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 .v1-panel {
@@ -153,6 +155,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 .v1-panel-header {
