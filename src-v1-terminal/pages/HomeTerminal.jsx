@@ -127,14 +127,16 @@ export function HomeTerminal() {
           </div>
         </div>
 
-        {/* Right: Order Entry & Trades (mobile-visible on tab 'trade') */}
+        {/* Right: Order Entry & Trades */}
         <div
           className={`v1-col-panel ${terminalMobileTab === 'trade' || terminalMobileTab === 'book' ? 'mobile-visible' : ''}`}
           style={{ gap: '1px', background: 'var(--border-subtle)' }}
         >
-          {terminalMobileTab === 'trade' && <OrderPanel />}
-          {terminalMobileTab === 'book' && <RecentTrades />}
-          <div className="v1-desktop-only" style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+          <div className="v1-mobile-only" style={{ display: 'flex', flexDirection: 'column', gap: '1px', width: '100%' }}>
+            {terminalMobileTab === 'trade' && <OrderPanel />}
+            {terminalMobileTab === 'book' && <RecentTrades />}
+          </div>
+          <div className="v1-desktop-only" style={{ display: 'flex', flexDirection: 'column', gap: '1px', width: '100%' }}>
             <OrderPanel />
             <RecentTrades />
           </div>

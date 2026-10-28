@@ -51,6 +51,15 @@ export class ErrorBoundary extends Component {
           >
             Reload Interface
           </button>
+
+          {this.state.error && (
+            <details style={{ marginTop: '16px', textAlign: 'left', fontSize: '0.72rem', color: '#ef4444' }}>
+              <summary style={{ cursor: 'pointer', color: 'var(--text-muted)' }}>Diagnostic Info</summary>
+              <pre style={{ overflowX: 'auto', padding: '8px', background: 'rgba(0,0,0,0.4)', borderRadius: '4px', marginTop: '6px' }}>
+                {this.state.error.toString()}
+              </pre>
+            </details>
+          )}
         </div>
       )
     }

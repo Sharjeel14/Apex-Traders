@@ -1,15 +1,5 @@
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-} from 'chart.js'
+import 'chart.js/auto'
+import { Chart as ChartJS } from 'chart.js'
 import { Chart } from 'react-chartjs-2'
 import { useMarketStore } from '@src/store/marketStore'
 import { useIndicatorStore } from '@src/store/indicatorStore'
@@ -21,44 +11,45 @@ import { LineChart as LineIcon, CandlestickChart as CandleIcon } from 'lucide-re
 const candlestickWicksPlugin = {
   id: 'candlestickWicksPlugin',
   beforeDatasetDraw(chart, args) {
-    const meta = chart.getDatasetMeta(args.index)
-    if (!meta || !meta.data || !chart.config.options?.plugins?.candlestickWicks?.enabled) return
-    const candles = chart.config.options.plugins.candlestickWicks.candles || []
-    if (candles.length === 0) return
+    try {
+      if (args.index !== 0) return
+      const opts = chart.config.options?.plugins?.candlestickWicks
+      if (!opts || !opts.enabled) return
+      const candles = opts.candles || []
+      const yScale = chart.scales?.y
+      if (!yScale) return
+      const meta = chart.getDatasetMeta(0)
+      if (!meta || !meta.data) return
 
-    const { ctx } = chart
-    ctx.save()
-    meta.data.forEach((bar, idx) => {
-      const candle = candles[idx]
-      if (!candle) return
-      const x = bar.x
-      const yScale = chart.scales.y
-      const yHigh = yScale.getPixelForValue(candle.high)
-      const yLow = yScale.getPixelForValue(candle.low)
+      const { ctx } = chart
+      ctx.save()
+      meta.data.forEach((bar, idx) => {
+        const candle = candles[idx]
+        if (!candle || !bar) return
+        const x = bar.x
+        if (typeof x !== 'number' || isNaN(x)) return
+        const yHigh = yScale.getPixelForValue(candle.high)
+        const yLow = yScale.getPixelForValue(candle.low)
 
-      ctx.strokeStyle = candle.isBull ? '#10b981' : '#ef4444'
-      ctx.lineWidth = 1.5
-      ctx.beginPath()
-      ctx.moveTo(x, yHigh)
-      ctx.lineTo(x, yLow)
-      ctx.stroke()
-    })
-    ctx.restore()
+        ctx.strokeStyle = candle.isBull ? '#10b981' : '#ef4444'
+        ctx.lineWidth = 1.5
+        ctx.beginPath()
+        ctx.moveTo(x, yHigh)
+        ctx.lineTo(x, yLow)
+        ctx.stroke()
+      })
+      ctx.restore()
+    } catch {
+      // Safe no-op on render frames
+    }
   },
 }
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-  candlestickWicksPlugin
-)
+try {
+  ChartJS.register(candlestickWicksPlugin)
+} catch {
+  // Already registered
+}
 
 export function TradingChart() {
   const activePair = useMarketStore((s) => s.activePair)

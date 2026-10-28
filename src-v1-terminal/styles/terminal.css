@@ -482,6 +482,10 @@
   display: flex !important;
 }
 
+.v1-mobile-only {
+  display: none !important;
+}
+
 .v1-mobile-tabs-bar {
   display: none;
 }
@@ -493,6 +497,10 @@
 
   .v1-desktop-only {
     display: none !important;
+  }
+
+  .v1-mobile-only {
+    display: flex !important;
   }
 
   .v1-header {
