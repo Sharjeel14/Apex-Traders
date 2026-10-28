@@ -7,7 +7,7 @@ import { useThemeStore } from '@src/store/themeStore'
 import { calculateSMA, calculateEMA, calculateBollingerBands, calculateRSI, calculateMACD } from '@src/shared/indicators'
 import { LineChart as LineIcon, CandlestickChart as CandleIcon } from 'lucide-react'
 
-// Registered ONCE at module top level to prevent duplicate registration crash
+// Candlestick High/Low Wicks Plugin (Binance Green #0ecb81 & Binance Red #f6465d)
 const candlestickWicksPlugin = {
   id: 'candlestickWicksPlugin',
   beforeDatasetDraw(chart, args) {
@@ -31,7 +31,7 @@ const candlestickWicksPlugin = {
         const yHigh = yScale.getPixelForValue(candle.high)
         const yLow = yScale.getPixelForValue(candle.low)
 
-        ctx.strokeStyle = candle.isBull ? '#10b981' : '#ef4444'
+        ctx.strokeStyle = candle.isBull ? '#0ecb81' : '#f6465d'
         ctx.lineWidth = 1.5
         ctx.beginPath()
         ctx.moveTo(x, yHigh)
@@ -40,7 +40,7 @@ const candlestickWicksPlugin = {
       })
       ctx.restore()
     } catch {
-      // Safe no-op on render frames
+      // Safe no-op
     }
   },
 }
@@ -86,46 +86,69 @@ export function TradingChart() {
   const macd = showMACD ? calculateMACD(prices, 12, 26, 9) : null
 
   // Colors
-  const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)'
   const textColor = isDark ? '#94a3b8' : '#64748b'
   const isBull = pairData.change24h >= 0
 
   const isCandleMode = proChartPattern === 'candle' && candles.length > 0
 
+  // Calculate dynamic Y-axis bounds so chart fills the vertical space like Binance
+  const allValues = [
+    ...prices,
+    ...(isCandleMode ? candles.flatMap((c) => [c.low, c.high]) : []),
+    ...(sma20 ? sma20.filter((v) => v !== null) : []),
+    ...(bollinger ? [...bollinger.upper.filter((v) => v !== null), ...bollinger.lower.filter((v) => v !== null)] : []),
+  ].filter((v) => typeof v === 'number' && !isNaN(v))
+
+  const rawMin = allValues.length > 0 ? Math.min(...allValues) : pairData.price * 0.98
+  const rawMax = allValues.length > 0 ? Math.max(...allValues) : pairData.price * 1.02
+  const spread = Math.max(rawMax - rawMin, pairData.price * 0.005)
+  const dec = pairData.price > 10 ? 2 : 4
+  const yMin = Number((rawMin - spread * 0.12).toFixed(dec))
+  const yMax = Number((rawMax + spread * 0.12).toFixed(dec))
+
   // Datasets
   const datasets = []
 
   if (isCandleMode) {
-    // Floating bars for candle bodies [min(open, close), max(open, close)]
+    // Binance Style Candlesticks
     datasets.push({
       type: 'bar',
       label: `${activePair} Candles`,
       data: candles.map((c) => {
         const lower = Math.min(c.open, c.close)
         const upper = Math.max(c.open, c.close)
-        return lower === upper ? [lower - 0.5, upper + 0.5] : [lower, upper]
+        return lower === upper ? [lower - spread * 0.003, upper + spread * 0.003] : [lower, upper]
       }),
-      backgroundColor: candles.map((c) => (c.isBull ? '#10b981' : '#ef4444')),
-      borderColor: candles.map((c) => (c.isBull ? '#10b981' : '#ef4444')),
+      backgroundColor: candles.map((c) => (c.isBull ? '#0ecb81' : '#f6465d')),
+      borderColor: candles.map((c) => (c.isBull ? '#0ecb81' : '#f6465d')),
       borderWidth: 1,
-      barPercentage: 0.65,
+      barPercentage: 0.75,
       order: 2,
     })
   } else {
-    // Continuous Price Area Line
+    // Binance Signature Gold Line Chart (#f3ba2f) with smooth gradient
     datasets.push({
       type: 'line',
       label: `${activePair} Price`,
       data: prices,
-      borderColor: isBull ? '#10b981' : '#ef4444',
-      backgroundColor: isBull
-        ? isDark ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.08)'
-        : isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(239, 68, 68, 0.08)',
+      borderColor: '#f3ba2f',
+      backgroundColor: (context) => {
+        const ctx = context.chart?.ctx
+        if (!ctx) return 'rgba(243, 186, 47, 0.1)'
+        const gradient = ctx.createLinearGradient(0, 0, 0, 340)
+        gradient.addColorStop(0, 'rgba(243, 186, 47, 0.28)')
+        gradient.addColorStop(0.7, 'rgba(243, 186, 47, 0.04)')
+        gradient.addColorStop(1, 'rgba(243, 186, 47, 0.0)')
+        return gradient
+      },
       fill: true,
-      tension: 0.15,
+      tension: 0.25,
       borderWidth: 2,
       pointRadius: 0,
       pointHoverRadius: 4,
+      pointHoverBackgroundColor: '#f3ba2f',
+      pointHoverBorderColor: '#fff',
+      pointHoverBorderWidth: 2,
       order: 2,
     })
   }
@@ -136,7 +159,7 @@ export function TradingChart() {
       type: 'line',
       label: 'SMA (20)',
       data: sma20,
-      borderColor: '#f59e0b',
+      borderColor: '#38bdf8',
       borderWidth: 1.5,
       pointRadius: 0,
       fill: false,
@@ -185,7 +208,7 @@ export function TradingChart() {
         type: 'line',
         label: 'Bollinger Upper',
         data: bollinger.upper,
-        borderColor: 'rgba(59, 130, 246, 0.6)',
+        borderColor: 'rgba(59, 130, 246, 0.65)',
         borderWidth: 1,
         borderDash: [4, 4],
         pointRadius: 0,
@@ -196,7 +219,7 @@ export function TradingChart() {
         type: 'line',
         label: 'Bollinger Lower',
         data: bollinger.lower,
-        borderColor: 'rgba(59, 130, 246, 0.6)',
+        borderColor: 'rgba(59, 130, 246, 0.65)',
         borderWidth: 1,
         borderDash: [4, 4],
         pointRadius: 0,
@@ -223,22 +246,23 @@ export function TradingChart() {
         position: 'top',
         labels: {
           color: textColor,
-          boxWidth: 12,
-          font: { size: 10, family: 'Inter' },
+          boxWidth: 10,
+          font: { size: 10, family: 'Inter', weight: '600' },
         },
       },
       tooltip: {
-        backgroundColor: isDark ? '#1e293b' : '#ffffff',
-        titleColor: isDark ? '#f8fafc' : '#0f172a',
-        bodyColor: isDark ? '#cbd5e1' : '#334155',
-        borderColor: isDark ? '#334155' : '#cbd5e1',
+        backgroundColor: isDark ? '#181a20' : '#ffffff',
+        titleColor: isDark ? '#eaecef' : '#0f172a',
+        bodyColor: isDark ? '#b7bdc6' : '#334155',
+        borderColor: isDark ? '#2b313a' : '#cbd5e1',
         borderWidth: 1,
+        padding: 10,
         callbacks: {
           label: (context) => {
             if (isCandleMode && context.datasetIndex === 0) {
               const c = candles[context.dataIndex]
               if (!c) return ''
-              return ` O: $${c.open} | H: $${c.high} | L: $${c.low} | C: $${c.close}`
+              return ` O: $${c.open.toLocaleString()} | H: $${c.high.toLocaleString()} | L: $${c.low.toLocaleString()} | C: $${c.close.toLocaleString()}`
             }
             return `${context.dataset.label}: ${context.formattedValue}`
           },
@@ -247,13 +271,20 @@ export function TradingChart() {
     },
     scales: {
       x: {
-        grid: { color: gridColor },
-        ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 8 },
+        grid: { color: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.04)' },
+        ticks: { color: textColor, font: { size: 9 }, maxTicksLimit: 7 },
       },
       y: {
         position: 'right',
-        grid: { color: gridColor },
-        ticks: { color: textColor, font: { size: 9, family: 'monospace' } },
+        beginAtZero: false,
+        min: yMin,
+        max: yMax,
+        grid: { color: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.05)' },
+        ticks: {
+          color: textColor,
+          font: { size: 10, family: 'monospace' },
+          callback: (val) => `$${Number(val).toLocaleString(undefined, { minimumFractionDigits: dec, maximumFractionDigits: dec })}`,
+        },
       },
     },
   }
@@ -289,7 +320,7 @@ export function TradingChart() {
         min: 0,
         max: 100,
         position: 'right',
-        grid: { color: gridColor },
+        grid: { color: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.05)' },
         ticks: { color: textColor, font: { size: 9 }, stepSize: 30 },
       },
     },
@@ -321,7 +352,7 @@ export function TradingChart() {
             label: 'Histogram',
             data: macd.histogram,
             backgroundColor: macd.histogram.map((v) =>
-              v >= 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)'
+              v >= 0 ? '#0ecb81' : '#f6465d'
             ),
           },
         ],
@@ -371,7 +402,7 @@ export function TradingChart() {
                 background: proChartPattern === 'line' ? 'var(--color-primary)' : 'transparent',
                 color: proChartPattern === 'line' ? '#fff' : 'var(--text-muted)',
               }}
-              title="Line Chart"
+              title="Binance Gold Line Chart"
             >
               <LineIcon size={12} />
               <span>Line</span>
@@ -401,7 +432,7 @@ export function TradingChart() {
           </div>
         </div>
 
-        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+        <div style={{ fontSize: '0.75rem', color: isBull ? '#0ecb81' : '#f6465d', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
           Last: ${pairData.price.toLocaleString()} ({isBull ? '+' : ''}{pairData.change24h}%)
         </div>
       </div>
