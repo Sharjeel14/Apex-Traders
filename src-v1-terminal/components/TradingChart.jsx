@@ -10,11 +10,12 @@ import {
   Legend,
   Filler,
 } from 'chart.js'
-import { Line } from 'react-chartjs-2'
+import { Chart } from 'react-chartjs-2'
 import { useMarketStore } from '@src/store/marketStore'
 import { useIndicatorStore } from '@src/store/indicatorStore'
 import { useThemeStore } from '@src/store/themeStore'
 import { calculateSMA, calculateEMA, calculateBollingerBands, calculateRSI, calculateMACD } from '@src/shared/indicators'
+import { LineChart as LineIcon, CandlestickChart as CandleIcon } from 'lucide-react'
 
 ChartJS.register(
   CategoryScale,
@@ -44,11 +45,14 @@ export function TradingChart() {
   const showBollinger = useIndicatorStore((s) => s.showBollinger)
   const showRSI = useIndicatorStore((s) => s.showRSI)
   const showMACD = useIndicatorStore((s) => s.showMACD)
+  const proChartPattern = useIndicatorStore((s) => s.proChartPattern)
+  const setProChartPattern = useIndicatorStore((s) => s.setProChartPattern)
 
   if (!pairData) return null
 
   const prices = pairData.history
   const labels = pairData.timestamps
+  const candles = pairData.candles || []
 
   // Indicator series
   const sma20 = showSMA20 ? calculateSMA(prices, 20) : null
@@ -64,9 +68,31 @@ export function TradingChart() {
   const textColor = isDark ? '#94a3b8' : '#64748b'
   const isBull = pairData.change24h >= 0
 
-  // Main Price Datasets
-  const datasets = [
-    {
+  const isCandleMode = proChartPattern === 'candle' && candles.length > 0
+
+  // Datasets
+  const datasets = []
+
+  if (isCandleMode) {
+    // Floating bars for candle bodies [min(open, close), max(open, close)]
+    datasets.push({
+      type: 'bar',
+      label: `${activePair} Candles`,
+      data: candles.map((c) => {
+        const lower = Math.min(c.open, c.close)
+        const upper = Math.max(c.open, c.close)
+        return lower === upper ? [lower - 0.5, upper + 0.5] : [lower, upper]
+      }),
+      backgroundColor: candles.map((c) => (c.isBull ? '#10b981' : '#ef4444')),
+      borderColor: candles.map((c) => (c.isBull ? '#10b981' : '#ef4444')),
+      borderWidth: 1,
+      barPercentage: 0.65,
+      order: 2,
+    })
+  } else {
+    // Continuous Price Area Line
+    datasets.push({
+      type: 'line',
       label: `${activePair} Price`,
       data: prices,
       borderColor: isBull ? '#10b981' : '#ef4444',
@@ -78,52 +104,63 @@ export function TradingChart() {
       borderWidth: 2,
       pointRadius: 0,
       pointHoverRadius: 4,
-    },
-  ]
+      order: 2,
+    })
+  }
 
+  // Indicator Overlays
   if (sma20) {
     datasets.push({
+      type: 'line',
       label: 'SMA (20)',
       data: sma20,
       borderColor: '#f59e0b',
       borderWidth: 1.5,
       pointRadius: 0,
       fill: false,
+      order: 1,
     })
   }
   if (sma50) {
     datasets.push({
+      type: 'line',
       label: 'SMA (50)',
       data: sma50,
       borderColor: '#ec4899',
       borderWidth: 1.5,
       pointRadius: 0,
       fill: false,
+      order: 1,
     })
   }
   if (ema12) {
     datasets.push({
+      type: 'line',
       label: 'EMA (12)',
       data: ema12,
       borderColor: '#06b6d4',
       borderWidth: 1.5,
       pointRadius: 0,
       fill: false,
+      order: 1,
     })
   }
   if (ema26) {
     datasets.push({
+      type: 'line',
       label: 'EMA (26)',
       data: ema26,
       borderColor: '#8b5cf6',
       borderWidth: 1.5,
       pointRadius: 0,
       fill: false,
+      order: 1,
     })
   }
   if (bollinger) {
     datasets.push(
       {
+        type: 'line',
         label: 'Bollinger Upper',
         data: bollinger.upper,
         borderColor: 'rgba(59, 130, 246, 0.6)',
@@ -131,8 +168,10 @@ export function TradingChart() {
         borderDash: [4, 4],
         pointRadius: 0,
         fill: false,
+        order: 1,
       },
       {
+        type: 'line',
         label: 'Bollinger Lower',
         data: bollinger.lower,
         borderColor: 'rgba(59, 130, 246, 0.6)',
@@ -140,8 +179,38 @@ export function TradingChart() {
         borderDash: [4, 4],
         pointRadius: 0,
         fill: false,
+        order: 1,
       }
     )
+  }
+
+  // Candlestick High/Low Wicks Plugin
+  const candlestickWicksPlugin = {
+    id: 'candlestickWicks',
+    beforeDatasetDraw: (chart, args) => {
+      if (!isCandleMode || args.index !== 0) return
+      const { ctx } = chart
+      const meta = chart.getDatasetMeta(0)
+      if (!meta || !meta.data) return
+
+      ctx.save()
+      meta.data.forEach((bar, idx) => {
+        const candle = candles[idx]
+        if (!candle) return
+        const x = bar.x
+        const yScale = chart.scales.y
+        const yHigh = yScale.getPixelForValue(candle.high)
+        const yLow = yScale.getPixelForValue(candle.low)
+
+        ctx.strokeStyle = candle.isBull ? '#10b981' : '#ef4444'
+        ctx.lineWidth = 1.5
+        ctx.beginPath()
+        ctx.moveTo(x, yHigh)
+        ctx.lineTo(x, yLow)
+        ctx.stroke()
+      })
+      ctx.restore()
+    },
   }
 
   const mainOptions = {
@@ -167,6 +236,16 @@ export function TradingChart() {
         bodyColor: isDark ? '#cbd5e1' : '#334155',
         borderColor: isDark ? '#334155' : '#cbd5e1',
         borderWidth: 1,
+        callbacks: {
+          label: (context) => {
+            if (isCandleMode && context.datasetIndex === 0) {
+              const c = candles[context.dataIndex]
+              if (!c) return ''
+              return ` O: $${c.open} | H: $${c.high} | L: $${c.low} | C: $${c.close}`
+            }
+            return `${context.dataset.label}: ${context.formattedValue}`
+          },
+        },
       },
     },
     scales: {
@@ -188,6 +267,7 @@ export function TradingChart() {
         labels,
         datasets: [
           {
+            type: 'line',
             label: 'RSI (14)',
             data: rsi,
             borderColor: '#a855f7',
@@ -255,27 +335,75 @@ export function TradingChart() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '440px' }}>
-      {/* Timeframe Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
-        <div style={{ display: 'flex', gap: '4px' }}>
-          {timeframes.map((tf) => (
+      {/* Timeframe & Pattern Toggle Bar */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Line vs Candle Pattern Switcher */}
+          <div style={{ display: 'flex', background: 'var(--bg-input)', padding: '2px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border-medium)' }}>
             <button
-              key={tf}
-              onClick={() => setTimeframe(tf)}
+              type="button"
+              onClick={() => setProChartPattern('candle')}
               style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
                 padding: '3px 8px',
-                fontSize: '0.75rem',
-                fontWeight: 600,
+                fontSize: '0.72rem',
+                fontWeight: 700,
                 borderRadius: 'var(--radius-xs)',
-                background: timeframe === tf ? 'var(--color-primary)' : 'transparent',
-                color: timeframe === tf ? '#fff' : 'var(--text-secondary)',
-                border: 'none',
+                background: proChartPattern === 'candle' ? 'var(--color-primary)' : 'transparent',
+                color: proChartPattern === 'candle' ? '#fff' : 'var(--text-muted)',
               }}
+              title="Candlestick Chart"
             >
-              {tf}
+              <CandleIcon size={12} />
+              <span>Candles</span>
             </button>
-          ))}
+
+            <button
+              type="button"
+              onClick={() => setProChartPattern('line')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '3px 8px',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                borderRadius: 'var(--radius-xs)',
+                background: proChartPattern === 'line' ? 'var(--color-primary)' : 'transparent',
+                color: proChartPattern === 'line' ? '#fff' : 'var(--text-muted)',
+              }}
+              title="Line Chart"
+            >
+              <LineIcon size={12} />
+              <span>Line</span>
+            </button>
+          </div>
+
+          {/* Timeframes */}
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {timeframes.map((tf) => (
+              <button
+                key={tf}
+                type="button"
+                onClick={() => setTimeframe(tf)}
+                style={{
+                  padding: '3px 8px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  borderRadius: 'var(--radius-xs)',
+                  background: timeframe === tf ? 'var(--color-primary)' : 'transparent',
+                  color: timeframe === tf ? '#fff' : 'var(--text-secondary)',
+                  border: 'none',
+                }}
+              >
+                {tf}
+              </button>
+            ))}
+          </div>
         </div>
+
         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
           Last: ${pairData.price.toLocaleString()} ({isBull ? '+' : ''}{pairData.change24h}%)
         </div>
@@ -283,7 +411,12 @@ export function TradingChart() {
 
       {/* Main Chart */}
       <div style={{ flex: 1, minHeight: '260px', padding: '8px 12px 4px 12px', position: 'relative' }}>
-        <Line data={{ labels, datasets }} options={mainOptions} />
+        <Chart
+          type={isCandleMode ? 'bar' : 'line'}
+          data={{ labels, datasets }}
+          options={mainOptions}
+          plugins={[candlestickWicksPlugin]}
+        />
       </div>
 
       {/* Sub-chart: RSI */}
@@ -292,7 +425,7 @@ export function TradingChart() {
           <div style={{ position: 'absolute', top: 4, left: 14, fontSize: '0.68rem', color: '#a855f7', fontWeight: 600 }}>
             RSI (14) — 70 Overbought / 30 Oversold
           </div>
-          <Line data={rsiData} options={rsiOptions} />
+          <Chart type="line" data={rsiData} options={rsiOptions} />
         </div>
       )}
 
@@ -302,7 +435,7 @@ export function TradingChart() {
           <div style={{ position: 'absolute', top: 4, left: 14, fontSize: '0.68rem', color: '#3b82f6', fontWeight: 600 }}>
             MACD (12, 26, 9)
           </div>
-          <Line data={macdData} options={rsiOptions} />
+          <Chart type="line" data={macdData} options={rsiOptions} />
         </div>
       )}
     </div>

@@ -28,7 +28,6 @@ export function Header() {
           </div>
           <span>ApexTrade</span>
         </div>
-        <span className="v1-brand-badge">PRO TERMINAL</span>
       </div>
 
       <nav className="v1-nav-links">

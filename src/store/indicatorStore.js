@@ -13,8 +13,10 @@ export const useIndicatorStore = create((set) => ({
 
   // Chart view style
   chartStyle: 'area', // 'area' | 'line'
+  proChartPattern: 'candle', // 'candle' | 'line'
 
   // Actions - Zero useState required in components
+  setProChartPattern: (pattern) => set({ proChartPattern: pattern }),
   toggleIndicator: (indicatorKey) => {
     set((state) => ({ [indicatorKey]: !state[indicatorKey] }))
   },

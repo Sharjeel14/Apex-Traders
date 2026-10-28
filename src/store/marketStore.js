@@ -10,22 +10,37 @@ const INITIAL_PAIRS = {
   'ADA/USDT': { name: 'Cardano', symbol: 'ADA', price: 0.468, change24h: 1.15, high24h: 0.485, low24h: 0.458, volume24h: '98M' },
 }
 
-function generateHistory(basePrice, count = 50) {
+function generateHistory(basePrice, count = 40) {
   const prices = []
   const volumes = []
   const timestamps = []
+  const candles = []
   let curr = basePrice * 0.94
   const now = Date.now()
 
   for (let i = count; i >= 0; i--) {
     const t = new Date(now - i * 15 * 60 * 1000)
     timestamps.push(t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+    const open = curr
     const change = (Math.random() - 0.48) * (curr * 0.015)
     curr = Math.max(curr * 0.5, curr + change)
-    prices.push(Number(curr.toFixed(curr > 10 ? 2 : 4)))
+    const close = curr
+    const high = Math.max(open, close) + Math.random() * (open * 0.005)
+    const low = Math.min(open, close) - Math.random() * (open * 0.005)
+    const dec = curr > 10 ? 2 : 4
+
+    const cObj = {
+      open: Number(open.toFixed(dec)),
+      high: Number(high.toFixed(dec)),
+      low: Number(low.toFixed(dec)),
+      close: Number(close.toFixed(dec)),
+      isBull: close >= open,
+    }
+    candles.push(cObj)
+    prices.push(cObj.close)
     volumes.push(Math.floor(Math.random() * 500 + 50))
   }
-  return { prices, volumes, timestamps }
+  return { prices, volumes, timestamps, candles }
 }
 
 function generateOrderBook(midPrice) {
@@ -75,12 +90,13 @@ function generateTrades(midPrice) {
 // Prepopulate market state
 const initialMarket = {}
 for (const [pair, info] of Object.entries(INITIAL_PAIRS)) {
-  const { prices, volumes, timestamps } = generateHistory(info.price)
+  const { prices, volumes, timestamps, candles } = generateHistory(info.price)
   initialMarket[pair] = {
     ...info,
     history: prices,
     volumes,
     timestamps,
+    candles,
   }
 }
 
@@ -164,7 +180,7 @@ export const useMarketStore = create((set, get) => ({
   setTimeframe: (timeframe) => {
     const active = get().activePair
     const currentData = get().pairs[active]
-    const { prices, volumes, timestamps } = generateHistory(currentData.price)
+    const { prices, volumes, timestamps, candles } = generateHistory(currentData.price)
     set((state) => ({
       timeframe,
       pairs: {
@@ -174,6 +190,7 @@ export const useMarketStore = create((set, get) => ({
           history: prices,
           volumes,
           timestamps,
+          candles,
         },
       },
     }))
@@ -338,6 +355,18 @@ export const useMarketStore = create((set, get) => ({
     // Refresh order book slightly
     const newBook = generateOrderBook(newPrice)
 
+    const lastCandle = current.candles ? current.candles[current.candles.length - 1] : null
+    const newCandles = current.candles ? [...current.candles] : []
+    if (lastCandle) {
+      newCandles[newCandles.length - 1] = {
+        ...lastCandle,
+        close: newPrice,
+        high: Math.max(lastCandle.high, newPrice),
+        low: Math.min(lastCandle.low, newPrice),
+        isBull: newPrice >= lastCandle.open,
+      }
+    }
+
     set({
       pairs: {
         ...pairs,
@@ -349,6 +378,7 @@ export const useMarketStore = create((set, get) => ({
           history: newHistory,
           volumes: newVolumes,
           timestamps: newTimestamps,
+          candles: newCandles,
         },
       },
       orderBook: newBook,
