@@ -1,11 +1,12 @@
 import { useRouterStore } from '@src/store/routerStore'
 import { useThemeStore } from '@src/store/themeStore'
 import { useI18nStore } from '@src/store/i18nStore'
-import { Moon, Sun, Compass, Menu, X } from 'lucide-react'
+import { Moon, Sun, Compass, Menu, X, Zap } from 'lucide-react'
 
 export function Header() {
   const currentPage = useRouterStore((s) => s.currentPage)
   const navigate = useRouterStore((s) => s.navigate)
+  const setVariation = useRouterStore((s) => s.setVariation)
   const isMobileMenuOpen = useRouterStore((s) => s.isMobileMenuOpen)
   const toggleMobileMenu = useRouterStore((s) => s.toggleMobileMenu)
 
@@ -64,6 +65,30 @@ export function Header() {
 
         {/* Header Actions */}
         <div className="v2-header-actions">
+          {/* Switch Variation Button */}
+          <button
+            type="button"
+            className="v2-switch-btn"
+            onClick={() => setVariation('v1')}
+            title="Switch to Pro Terminal"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              borderRadius: 'var(--radius-full)',
+              border: '1px solid var(--color-purple)',
+              background: 'rgba(139, 92, 246, 0.15)',
+              color: 'var(--color-purple)',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            <Zap size={14} />
+            <span>Pro Terminal</span>
+          </button>
+
           {/* Language Switch */}
           <button type="button" className="v2-icon-btn" onClick={toggleLang} title="Switch Language">
             <span style={{ fontSize: '0.72rem', fontWeight: 800 }}>{language.toUpperCase()}</span>
@@ -91,6 +116,15 @@ export function Header() {
       {/* Mobile Navigation Drawer */}
       {isMobileMenuOpen && (
         <nav className="v2-mobile-nav">
+          <button
+            type="button"
+            className="v2-mobile-nav-link"
+            onClick={() => setVariation('v1')}
+            style={{ color: 'var(--color-purple)', background: 'rgba(139, 92, 246, 0.12)', border: '1px solid rgba(139, 92, 246, 0.3)' }}
+          >
+            <Zap size={16} style={{ marginRight: 8 }} />
+            <span>Switch to Pro Terminal</span>
+          </button>
           <button
             type="button"
             className={`v2-mobile-nav-link ${currentPage === 'home' || currentPage === 'terminal' ? 'active' : ''}`}

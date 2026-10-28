@@ -288,25 +288,44 @@
 }
 
 .v2-pair-chip {
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: var(--radius-full);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  font-size: 0.78rem;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-medium);
+  color: var(--text-primary);
+  font-size: 0.82rem;
   font-weight: 600;
   white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   cursor: pointer;
   flex-shrink: 0;
   transition: all var(--transition-fast);
+}
+
+.v2-pair-chip:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--color-primary);
 }
 
 .v2-pair-chip.active {
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: #fff;
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.4);
+}
+
+.v2-pair-chip .chip-price {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.78rem;
+}
+
+.v2-pair-chip.active .chip-price {
+  color: #ffffff;
+  font-weight: 700;
 }
 
 /* Markets Table in V2 */
@@ -375,6 +394,10 @@
 }
 
 @media (max-width: 768px) {
+  .v2-header .v2-switch-btn {
+    display: none !important;
+  }
+
   #mobile-menu-toggle {
     display: flex !important;
   }

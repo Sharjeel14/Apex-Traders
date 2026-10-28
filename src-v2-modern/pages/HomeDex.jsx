@@ -92,8 +92,8 @@ export function HomeDex() {
               className={`v2-pair-chip ${activePair === pKey ? 'active' : ''}`}
               onClick={() => selectPair(pKey)}
             >
-              <span>{pKey}</span>
-              <span style={{ opacity: 0.8 }}>${pData.price.toLocaleString()}</span>
+              <span style={{ fontWeight: 700 }}>{pKey}</span>
+              <span className="chip-price">${pData.price.toLocaleString()}</span>
             </button>
           ))}
         </div>
