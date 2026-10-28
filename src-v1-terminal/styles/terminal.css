@@ -7,6 +7,8 @@
   background-color: var(--bg-app);
   color: var(--text-primary);
   font-family: var(--font-sans);
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .v1-header {
@@ -25,7 +27,7 @@
 .v1-nav-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   font-weight: 700;
   font-size: 1.15rem;
   letter-spacing: -0.02em;
@@ -34,7 +36,7 @@
 .v1-brand-badge {
   background: linear-gradient(135deg, #3b82f6, #8b5cf6);
   color: #fff;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   padding: 2px 6px;
   border-radius: var(--radius-xs);
   font-weight: 600;
@@ -64,7 +66,7 @@
 .v1-header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .v1-action-btn {
@@ -73,11 +75,12 @@
   border: 1px solid var(--border-subtle);
   background-color: var(--bg-surface-elevated);
   color: var(--text-primary);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   display: flex;
   align-items: center;
   gap: 6px;
   transition: background-color var(--transition-fast);
+  cursor: pointer;
 }
 
 .v1-action-btn:hover {
@@ -130,22 +133,19 @@
   font-weight: 600;
 }
 
-/* Grid Layout */
+/* Desktop Grid Layout */
 .v1-terminal-grid {
   display: grid;
   grid-template-columns: 280px 1fr 300px;
-  grid-template-rows: auto auto;
   gap: 1px;
   background-color: var(--border-subtle);
   flex: 1;
 }
 
-@media (max-width: 1200px) {
-  .v1-terminal-grid {
-    grid-template-columns: 1fr;
-    display: flex;
-    flex-direction: column;
-  }
+.v1-col-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .v1-panel {
@@ -178,7 +178,12 @@
   padding: 6px 12px;
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
-  flex-wrap: wrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.v1-indicator-toolbar::-webkit-scrollbar {
+  display: none;
 }
 
 .v1-ind-pill {
@@ -190,6 +195,7 @@
   background: var(--bg-input);
   color: var(--text-muted);
   cursor: pointer;
+  flex-shrink: 0;
   transition: all var(--transition-fast);
 }
 
@@ -462,4 +468,123 @@
   justify-content: space-between;
   font-size: 0.8rem;
   color: var(--text-muted);
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVE RULES FOR TERMINAL
+   ========================================================================== */
+
+.v1-desktop-only {
+  display: flex !important;
+}
+
+.v1-mobile-tabs-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .v1-btn-text {
+    display: none;
+  }
+
+  .v1-desktop-only {
+    display: none !important;
+  }
+
+  .v1-header {
+    height: 52px;
+    padding: 0 12px;
+  }
+
+  .v1-nav-links {
+    display: none;
+  }
+
+  .v1-ticker-strip {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .v1-pair-dropdown {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+  }
+
+  .v1-ticker-metrics {
+    overflow-x: auto;
+    width: 100%;
+    gap: 16px;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .v1-ticker-metrics::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Segmented Mobile Tabs */
+  .v1-mobile-tabs-bar {
+    display: flex;
+    background: var(--bg-surface-elevated);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 4px 8px;
+    gap: 4px;
+    position: sticky;
+    top: 52px;
+    z-index: 35;
+  }
+
+  .v1-mobile-tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    border-radius: var(--radius-xs);
+    color: var(--text-muted);
+    background: transparent;
+    transition: all var(--transition-fast);
+  }
+
+  .v1-mobile-tab-btn.active {
+    background: var(--color-primary);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+  }
+
+  .v1-terminal-grid {
+    display: flex;
+    flex-direction: column;
+    background-color: transparent;
+  }
+
+  .v1-col-panel {
+    display: none;
+  }
+
+  .v1-col-panel.mobile-visible {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .v1-bottom-section {
+    display: none;
+  }
+
+  .v1-bottom-section.mobile-visible {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .v1-footer {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+    padding: 16px 12px;
+  }
 }

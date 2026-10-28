@@ -127,3 +127,54 @@ a {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+/* Mobile Bottom Navigation Bar */
+.mobile-bottom-app-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 68px !important;
+  }
+
+  .mobile-bottom-app-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border-subtle);
+    align-items: center;
+    justify-content: space-around;
+    padding: 4px 8px env(safe-area-inset-bottom, 6px) 8px;
+    z-index: 9999;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.25);
+  }
+
+  .mobile-tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    flex: 1;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 600;
+    transition: all var(--transition-fast);
+  }
+
+  .mobile-tab-item.active {
+    color: var(--color-primary);
+  }
+
+  .mobile-tab-item.highlight {
+    color: var(--color-purple);
+  }
+}

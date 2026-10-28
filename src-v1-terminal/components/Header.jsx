@@ -1,7 +1,7 @@
 import { useRouterStore } from '@src/store/routerStore'
 import { useThemeStore } from '@src/store/themeStore'
 import { useI18nStore } from '@src/store/i18nStore'
-import { Moon, Sun, Globe, RefreshCw, Zap } from 'lucide-react'
+import { Moon, Sun, Globe, Sparkles, Zap } from 'lucide-react'
 
 export function Header() {
   const currentPage = useRouterStore((s) => s.currentPage)
@@ -67,12 +67,12 @@ export function Header() {
         <button
           type="button"
           className="v1-action-btn"
-          style={{ borderColor: 'var(--color-purple)', color: 'var(--color-purple)' }}
+          style={{ borderColor: 'var(--color-purple)', color: 'var(--color-purple)', fontWeight: 700 }}
           onClick={() => setVariation('v2')}
-          title="Switch to Variation 2: Modern FinTech DEX"
+          title="Switch to Modern DEX"
         >
-          <RefreshCw size={14} />
-          <span>Switch to Modern DEX</span>
+          <Sparkles size={14} color="var(--color-purple)" />
+          <span className="v1-btn-text">Modern DEX</span>
         </button>
 
         {/* Language */}

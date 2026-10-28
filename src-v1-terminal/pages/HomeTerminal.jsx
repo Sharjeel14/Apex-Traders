@@ -8,13 +8,14 @@ import { OrderBook } from '../components/OrderBook'
 import { OrderPanel } from '../components/OrderPanel'
 import { RecentTrades } from '../components/RecentTrades'
 import { PositionsTabs } from '../components/PositionsTabs'
-import { ArrowLeft, LayoutGrid, BarChart2 } from 'lucide-react'
+import { ArrowLeft, LineChart, BookOpen, Send, ClipboardList } from 'lucide-react'
 
 export function HomeTerminal() {
   const homeViewMode = useMarketStore((s) => s.homeViewMode)
-  const setHomeViewMode = useMarketStore((s) => s.setHomeViewMode)
   const backToTickerList = useMarketStore((s) => s.backToTickerList)
   const activePair = useMarketStore((s) => s.activePair)
+  const terminalMobileTab = useMarketStore((s) => s.terminalMobileTab)
+  const setTerminalMobileTab = useMarketStore((s) => s.setTerminalMobileTab)
   const t = useI18nStore((s) => s.t)
 
   if (homeViewMode === 'list') {
@@ -29,7 +30,7 @@ export function HomeTerminal() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '6px 16px',
+          padding: '8px 14px',
           background: 'var(--bg-surface-elevated)',
           borderBottom: '1px solid var(--border-subtle)',
           fontSize: '0.8rem',
@@ -47,74 +48,102 @@ export function HomeTerminal() {
             cursor: 'pointer',
           }}
         >
-          <ArrowLeft size={14} />
+          <ArrowLeft size={15} />
           <span>{t('list.back')}</span>
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ color: 'var(--text-muted)' }}>Trading Desk:</span>
-          <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{activePair}</span>
-          <div style={{ display: 'flex', gap: '4px', marginLeft: '12px' }}>
-            <button
-              type="button"
-              onClick={() => setHomeViewMode('list')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '3px 8px',
-                borderRadius: 'var(--radius-xs)',
-                background: 'var(--bg-input)',
-                border: '1px solid var(--border-medium)',
-                fontSize: '0.72rem',
-                color: 'var(--text-secondary)',
-              }}
-            >
-              <LayoutGrid size={12} />
-              <span>{t('list.viewList')}</span>
-            </button>
-            <button
-              type="button"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '3px 8px',
-                borderRadius: 'var(--radius-xs)',
-                background: 'var(--color-primary)',
-                border: '1px solid var(--color-primary)',
-                fontSize: '0.72rem',
-                color: '#fff',
-                fontWeight: 700,
-              }}
-            >
-              <BarChart2 size={12} />
-              <span>{t('list.viewTrade')}</span>
-            </button>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Pair:</span>
+          <span
+            style={{
+              padding: '2px 8px',
+              borderRadius: 'var(--radius-xs)',
+              background: 'var(--bg-input)',
+              border: '1px solid var(--border-medium)',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              color: 'var(--text-primary)',
+            }}
+          >
+            {activePair}
+          </span>
         </div>
       </div>
 
+      {/* Real-time Ticker Metrics Strip */}
       <TickerStrip />
 
+      {/* Mobile Segmented Tab Bar (Visible on mobile only) */}
+      <nav className="v1-mobile-tabs-bar" aria-label="Terminal Sections">
+        <button
+          type="button"
+          onClick={() => setTerminalMobileTab('chart')}
+          className={`v1-mobile-tab-btn ${terminalMobileTab === 'chart' ? 'active' : ''}`}
+        >
+          <LineChart size={14} />
+          <span>Chart</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTerminalMobileTab('book')}
+          className={`v1-mobile-tab-btn ${terminalMobileTab === 'book' ? 'active' : ''}`}
+        >
+          <BookOpen size={14} />
+          <span>Book</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTerminalMobileTab('trade')}
+          className={`v1-mobile-tab-btn ${terminalMobileTab === 'trade' ? 'active' : ''}`}
+        >
+          <Send size={14} />
+          <span>Order</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTerminalMobileTab('orders')}
+          className={`v1-mobile-tab-btn ${terminalMobileTab === 'orders' ? 'active' : ''}`}
+        >
+          <ClipboardList size={14} />
+          <span>Orders</span>
+        </button>
+      </nav>
+
+      {/* Main Terminal Desk Layout */}
       <div className="v1-terminal-grid">
-        {/* Left Column: Order Book */}
-        <OrderBook />
-
-        {/* Center Column: Chart & Indicator Toolbar */}
-        <div className="v1-panel">
-          <IndicatorBar />
-          <TradingChart />
+        {/* Left: Order Book (mobile-visible on tab 'book') */}
+        <div className={`v1-col-panel ${terminalMobileTab === 'book' ? 'mobile-visible' : ''}`}>
+          <OrderBook />
         </div>
 
-        {/* Right Column: Order Panel & Live Trades */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--border-subtle)' }}>
-          <OrderPanel />
-          <RecentTrades />
+        {/* Center: Chart & Indicators (mobile-visible on tab 'chart') */}
+        <div className={`v1-col-panel ${terminalMobileTab === 'chart' ? 'mobile-visible' : ''}`}>
+          <div className="v1-panel">
+            <IndicatorBar />
+            <TradingChart />
+          </div>
         </div>
 
-        {/* Bottom Section: Positions & Orders */}
-        <PositionsTabs />
+        {/* Right: Order Entry & Trades (mobile-visible on tab 'trade') */}
+        <div
+          className={`v1-col-panel ${terminalMobileTab === 'trade' || terminalMobileTab === 'book' ? 'mobile-visible' : ''}`}
+          style={{ gap: '1px', background: 'var(--border-subtle)' }}
+        >
+          {terminalMobileTab === 'trade' && <OrderPanel />}
+          {terminalMobileTab === 'book' && <RecentTrades />}
+          <div className="v1-desktop-only" style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+            <OrderPanel />
+            <RecentTrades />
+          </div>
+        </div>
+
+        {/* Bottom Section: Positions & Orders (mobile-visible on tab 'orders') */}
+        <div className={`v1-bottom-section ${terminalMobileTab === 'orders' ? 'mobile-visible' : ''}`}>
+          <PositionsTabs />
+        </div>
       </div>
     </div>
   )

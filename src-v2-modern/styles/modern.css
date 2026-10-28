@@ -394,8 +394,12 @@
 }
 
 @media (max-width: 768px) {
+  .v2-btn-text {
+    display: none;
+  }
+
   .v2-header .v2-switch-btn {
-    display: none !important;
+    padding: 6px 8px !important;
   }
 
   #mobile-menu-toggle {

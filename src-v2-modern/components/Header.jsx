@@ -75,7 +75,7 @@ export function Header() {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '6px 14px',
+              padding: '6px 12px',
               borderRadius: 'var(--radius-full)',
               border: '1px solid var(--color-purple)',
               background: 'rgba(139, 92, 246, 0.15)',
@@ -86,7 +86,7 @@ export function Header() {
             }}
           >
             <Zap size={14} />
-            <span>Pro Terminal</span>
+            <span className="v2-btn-text">Pro Terminal</span>
           </button>
 
           {/* Language Switch */}

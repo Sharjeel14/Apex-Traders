@@ -89,6 +89,7 @@ export const useMarketStore = create((set, get) => ({
   activePair: 'BTC/USDT',
   timeframe: '15m',
   homeViewMode: 'list', // 'list' | 'trading'
+  terminalMobileTab: 'chart', // 'chart' | 'book' | 'trade' | 'orders'
   orderBook: generateOrderBook(INITIAL_PAIRS['BTC/USDT'].price),
   recentTrades: generateTrades(INITIAL_PAIRS['BTC/USDT'].price),
 
@@ -135,10 +136,11 @@ export const useMarketStore = create((set, get) => ({
 
   // Actions
   setHomeViewMode: (mode) => set({ homeViewMode: mode }),
+  setTerminalMobileTab: (tab) => set({ terminalMobileTab: tab }),
 
   selectTickerAndOpenTrade: (pair) => {
     get().selectPair(pair)
-    set({ homeViewMode: 'trading' })
+    set({ homeViewMode: 'trading', terminalMobileTab: 'chart' })
   },
 
   backToTickerList: () => set({ homeViewMode: 'list' }),

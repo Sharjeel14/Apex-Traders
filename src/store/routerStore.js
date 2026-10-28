@@ -1,12 +1,13 @@
 import { create } from 'zustand'
+import { useMarketStore } from './marketStore'
 
 function parseHash() {
   const hash = window.location.hash.replace(/^#\/?/, '')
   const parts = hash.split('/')
   const variation = parts[0] === 'v1' ? 'v1' : 'v2'
   const validPages = ['terminal', 'home', 'about', 'terms', 'privacy']
-  const pageCandidate = parts[1] || 'home'
-  const page = validPages.includes(pageCandidate) ? pageCandidate : 'home'
+  const pageCandidate = parts[1] || (variation === 'v1' ? 'terminal' : 'home')
+  const page = validPages.includes(pageCandidate) ? pageCandidate : (variation === 'v1' ? 'terminal' : 'home')
   return { variation, page }
 }
 
@@ -38,8 +39,12 @@ export const useRouterStore = create((set, get) => {
     },
 
     setVariation: (variation) => {
-      const page = variation === 'v1' ? 'terminal' : 'home'
-      get().navigate(page, variation)
+      const targetPage = variation === 'v1' ? 'terminal' : 'home'
+      // When switching to V1 Pro Terminal, show trading desk directly so the UI clearly changes!
+      if (variation === 'v1') {
+        useMarketStore.getState().setHomeViewMode('trading')
+      }
+      get().navigate(targetPage, variation)
     },
   }
 })
